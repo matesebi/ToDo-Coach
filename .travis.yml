@@ -1,0 +1,53 @@
+language: android
+android:
+  components:
+    - build-tools-29.0.2
+    - android-29
+    - android-27
+    - add-on
+    - extra
+    - platform-tools
+    - tools
+    - extra-google-google_play_services
+    - extra-google-m2repository
+    - extra-android-m2repository
+    - addon-google_apis-google-28
+    - sys-img-armeabi-v7a-android-27
+
+env:
+  global:
+    - MALLOC_ARENA_MAX=2
+
+sudo: required
+
+before_install:
+  - yes | sdkmanager "platforms;android-29"
+
+before_script:
+  # Create and start emulator
+  - echo no | android create avd --force -n test -t android-27 --abi armeabi-v7a -s "768x1280"
+  - emulator -avd test -no-audio -no-window &
+  - adb wait-for-device
+  - adb shell input keyevent 82 &
+
+script: ./gradlew :app:build :app:connectedDebugAndroidTest
+
+deploy:
+  provider: releases
+  api_key: $GITHUB_KEY
+  file: app/build/outputs/apk/release/app-release.apk
+  skip_cleanup: true
+  on:
+    tags: true
+
+notifications:
+  email:
+  - recipients:
+      - matesebi96@gmail.com
+    if: branch = master
+    on_failure: always
+    on_success: always
+  - recipients:
+      - matesebi96@gmail.com
+    if: branch = dev
+    on_failure: always
