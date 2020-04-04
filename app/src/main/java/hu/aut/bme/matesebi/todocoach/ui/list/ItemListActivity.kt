@@ -1,4 +1,4 @@
-package hu.aut.bme.matesebi.todocoach
+package hu.aut.bme.matesebi.todocoach.ui.list
 
 import android.content.Intent
 import android.os.Bundle
@@ -9,8 +9,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import hu.aut.bme.matesebi.todocoach.ui.Presenter
+import hu.aut.bme.matesebi.todocoach.ui.detail.ItemDetailActivity
+import hu.aut.bme.matesebi.todocoach.ui.detail.ItemDetailFragment
+import hu.aut.bme.matesebi.todocoach.R
 
-import hu.aut.bme.matesebi.todocoach.dummy.DummyContent
+import hu.aut.bme.matesebi.todocoach.model.DummyContent
 import kotlinx.android.synthetic.main.activity_item_list.*
 import kotlinx.android.synthetic.main.item_list_content.view.*
 import kotlinx.android.synthetic.main.item_list.*
@@ -23,7 +27,7 @@ import kotlinx.android.synthetic.main.item_list.*
  * item details. On tablets, the activity presents the list of items and
  * item details side-by-side using two vertical panes.
  */
-class ItemListActivity : AppCompatActivity() {
+class ItemListActivity : AppCompatActivity(), ListScreen {
 
     /**
      * Whether or not the activity is in two-pane mode, i.e. running on a tablet
@@ -55,7 +59,12 @@ class ItemListActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerView(recyclerView: RecyclerView) {
-        recyclerView.adapter = SimpleItemRecyclerViewAdapter(this, DummyContent.ITEMS, twoPane)
+        recyclerView.adapter =
+            SimpleItemRecyclerViewAdapter(
+                this,
+                DummyContent.ITEMS,
+                twoPane
+            )
     }
 
     class SimpleItemRecyclerViewAdapter(private val parentActivity: ItemListActivity,
@@ -110,5 +119,9 @@ class ItemListActivity : AppCompatActivity() {
             val idView: TextView = view.id_text
             val contentView: TextView = view.content
         }
+    }
+
+    override fun showItems(items: List<DummyContent>) {
+        TODO("Not yet implemented")
     }
 }

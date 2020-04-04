@@ -1,4 +1,4 @@
-package hu.aut.bme.matesebi.todocoach
+package hu.aut.bme.matesebi.todocoach.ui.detail
 
 
 import android.os.Bundle
@@ -6,7 +6,8 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import hu.aut.bme.matesebi.todocoach.dummy.DummyContent
+import hu.aut.bme.matesebi.todocoach.R
+import hu.aut.bme.matesebi.todocoach.model.DummyContent
 import kotlinx.android.synthetic.main.activity_item_detail.*
 import kotlinx.android.synthetic.main.item_detail.view.*
 
