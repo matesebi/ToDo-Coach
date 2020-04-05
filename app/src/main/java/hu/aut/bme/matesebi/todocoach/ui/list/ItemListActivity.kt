@@ -13,11 +13,13 @@ import hu.aut.bme.matesebi.todocoach.ui.Presenter
 import hu.aut.bme.matesebi.todocoach.ui.detail.ItemDetailActivity
 import hu.aut.bme.matesebi.todocoach.ui.detail.ItemDetailFragment
 import hu.aut.bme.matesebi.todocoach.R
+import hu.aut.bme.matesebi.todocoach.injector
 
 import hu.aut.bme.matesebi.todocoach.model.DummyContent
 import kotlinx.android.synthetic.main.activity_item_list.*
 import kotlinx.android.synthetic.main.item_list_content.view.*
 import kotlinx.android.synthetic.main.item_list.*
+import javax.inject.Inject
 
 /**
  * An activity representing a list of Pings. This activity
@@ -35,6 +37,9 @@ class ItemListActivity : AppCompatActivity(), ListScreen {
      */
     private var twoPane: Boolean = false
 
+    @Inject
+    lateinit var presenter: ListPresenter
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_item_list)
@@ -42,9 +47,10 @@ class ItemListActivity : AppCompatActivity(), ListScreen {
         setSupportActionBar(toolbar)
         toolbar.title = title
 
+        injector.inject(this)
+        presenter.attachScreen(this)
         fab.setOnClickListener { view ->
-            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                    .setAction("Action", null).show()
+            presenter.refreshList()
         }
 
         if (item_detail_container != null) {
@@ -122,6 +128,6 @@ class ItemListActivity : AppCompatActivity(), ListScreen {
     }
 
     override fun showItems(items: List<DummyContent>) {
-        TODO("Not yet implemented")
+        Snackbar.make(item_list, "Showing new items", Snackbar.LENGTH_LONG).show()
     }
 }
