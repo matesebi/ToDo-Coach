@@ -1,10 +1,13 @@
-package hu.aut.bme.matesebi.todocoach
+package hu.aut.bme.matesebi.todocoach.ui.detail
 
 import android.content.Intent
 import android.os.Bundle
 import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
 import android.view.MenuItem
+import hu.aut.bme.matesebi.todocoach.R
+import hu.aut.bme.matesebi.todocoach.model.DummyContent
+import hu.aut.bme.matesebi.todocoach.ui.list.ItemListActivity
 import kotlinx.android.synthetic.main.activity_item_detail.*
 
 /**
@@ -13,7 +16,7 @@ import kotlinx.android.synthetic.main.activity_item_detail.*
  * item details are presented side-by-side with a list of items
  * in a [ItemListActivity].
  */
-class ItemDetailActivity : AppCompatActivity() {
+class ItemDetailActivity : AppCompatActivity(), DetailScreen {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,7 +45,8 @@ class ItemDetailActivity : AppCompatActivity() {
             // using a fragment transaction.
             val fragment = ItemDetailFragment().apply {
                 arguments = Bundle().apply {
-                    putString(ItemDetailFragment.ARG_ITEM_ID,
+                    putString(
+                        ItemDetailFragment.ARG_ITEM_ID,
                             intent.getStringExtra(ItemDetailFragment.ARG_ITEM_ID))
                 }
             }
@@ -67,4 +71,8 @@ class ItemDetailActivity : AppCompatActivity() {
                 }
                 else -> super.onOptionsItemSelected(item)
             }
+
+    override fun showDetails(item: DummyContent) {
+        TODO("Not yet implemented")
+    }
 }
