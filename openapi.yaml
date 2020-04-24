@@ -1,0 +1,415 @@
+openapi: 3.0.1
+info:
+  title: Todoist API
+  description: Todoist web API [documentation](https://developer.todoist.com/rest/v1/)
+  version: 1.0.0
+
+servers:
+- url: 'https://api.todoist.com/rest/v1'
+
+
+paths:
+  /projects:
+    get:
+      summary: Returns JSON-encoded array containing all user projects.
+      operationId: getProjects
+      responses:
+        200:
+          $ref: '#/components/responses/ProjectList'
+    post:
+      summary: Creates a new project and return its value in a JSON format.
+      operationId: createNewProject
+      requestBody:
+        $ref: '#/components/requestBodies/CreateNewProject'
+      responses:
+        200:
+          $ref: '#/components/responses/Project'
+  /projects/{projectId}:
+    parameters:
+    - in: path
+      required: true
+      name: projectId
+      schema:
+        type: integer
+    get:
+      summary: Returns a JSON object containing a project object related to the given id.
+      operationId: getProject
+      responses:
+        200:
+          $ref: '#/components/responses/Project'
+    post:
+      summary: Updates the project for the given id and returns HTTP status code 204 with an empty body.
+      operationId: updateProject
+      requestBody:
+        $ref: '#/components/requestBodies/UpdateProject'
+      responses:
+        204:
+          $ref: '#/components/responses/NoContent'
+    delete:
+      summary: Deletes a project and returns an empty response.
+      operationId: deleteProject
+      responses:
+        204:
+          $ref: '#/components/responses/NoContent'
+
+
+  /sections:
+    get:
+      summary: Returns JSON array of all sections. Successful response has 200 OK status and application/json Content-Type.
+      operationId: getSections
+      responses:
+        200:
+          $ref: '#/components/responses/SectionList'
+    post:
+      summary: Creates a new section and returns it as a JSON object. Successful response has 200 OK status and application/json Content-Type.
+      operationId: createSection
+      requestBody:
+        $ref: '#/components/requestBodies/CreateNewSection'
+      responses:
+        200:
+          $ref: '#/components/responses/Section'
+  /sections{sectionId}:
+    parameters:
+    - in: path
+      required: true
+      name: sectionId
+      schema:
+        type: integer
+    get:
+      summary: Returns single section as a JSON object. Successful response has 200 OK status and application/json Content-Type.
+      operationId: getSection
+      responses:
+        200:
+          $ref: '#/components/responses/Section'
+    post:
+      summary: Updates section for the given ID. Successful response has 204 No Content status and an empty body.
+      operationId: updateSection
+      requestBody:
+        $ref: '#/components/requestBodies/UpdateSection'
+      responses:
+        204:
+          $ref: '#/components/responses/NoContent'
+    delete:
+      summary: Deletes a section. Successful response has 204 No Content status and an empty body.
+      operationId: deleteSection
+      responses:
+        204:
+          $ref: '#/components/responses/NoContent'
+
+
+  /tasks:
+    get:
+      summary: Returns a JSON-encoded array containing all user active tasks.
+      operationId: getTasks
+      parameters:
+      - in: query
+        name: project_id
+        description: Filter tasks by project id.
+        schema:
+          type: integer
+      - in: query
+        name: label_id
+        description: Filter tasks by label.
+        schema:
+          type: integer
+      responses:
+        200:
+          $ref: '#/components/responses/TaskList'
+    post:
+      summary: Creates a new task and returns the JSON object according for it.
+      operationId: createTask
+      requestBody:
+        $ref: '#/components/requestBodies/CreateNewTask'
+      responses:
+        200:
+          $ref: '#/components/responses/Task'
+  /tasks/{taskId}:
+    parameters:
+    - in: path
+      required: true
+      name: taskId
+      schema:
+        type: integer
+    get:
+      summary: Returns an active (non-completed) task by id
+      operationId: getTask
+      responses:
+        200:
+          $ref: '#/components/responses/Task'
+    post:
+      summary: Updates a task and returns an empty body with the HTTP status code 204.
+      operationId: updateTask
+      requestBody:
+        $ref: '#/components/requestBodies/UpdateTask'
+      responses:
+        204:
+          $ref: '#/components/responses/NoContent'
+    delete:
+      summary: Deletes a task and returns an empty body with a HTTP status 204.
+      operationId: deleteTask
+      responses:
+        204:
+          $ref: '#/components/responses/NoContent'
+  /tasks/{taskId}/close:
+    parameters:
+    - in: path
+      required: true
+      name: taskId
+      schema:
+        type: integer
+    post:
+      summary: Closes a task and returns an empty body with a HTTP status code 204.
+      description: The command does exactly what official clients do when you close a task. Regular tasks are completed and moved to history, subtasks are checked (marked as done, but not moved to history), recurring tasks are moved forward (due date is updated).
+      operationId: closeTask
+      responses:
+        204:
+          $ref: '#/components/responses/NoContent'
+  /tasks/{taskId}/reopen:
+    parameters:
+    - in: path
+      required: true
+      name: taskId
+      schema:
+        type: integer
+    post:
+      summary: Reopens a task and returns an empty body with a HTTP status code 204.
+      description: See the [documentation](https://developer.todoist.com/rest/v1/?shell#reopen-a-task)
+      operationId: reopenTask
+      responses:
+        204:
+          $ref: '#/components/responses/NoContent'
+
+
+components:
+  requestBodies:
+    CreateNewProject:
+      description: Creates a new project and return its value in a JSON format.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Project'
+    UpdateProject:
+      description: Update a project.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Project'
+    CreateNewSection:
+      description: Creates a new project and return its value in a JSON format.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Section'
+    UpdateSection:
+      description: Update a project.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Section'
+    CreateNewTask:
+      description: Creates a new task and returns the JSON object according for it.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Task'
+    UpdateTask:
+      description: Update a project.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Task'
+
+
+  responses:
+    NoContent:
+      description: The request was processed successfully without any data to return.
+    ProjectList:
+      description: JSON-encoded array containing all user projects.
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/Project'
+    Project:
+      description: JSON-encoded user project.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Project'
+    SectionList:
+      description: JSON array of all sections.
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/Section'
+    Section:
+      description: JSON-encoded section.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Section'
+    TaskList:
+      description: JSON-encoded array containing all user active tasks.
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/Task'
+    Task:
+      description: JSON-encoded active task.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Task'
+
+
+  schemas:
+    Project:
+      properties:
+        id:
+          type: integer
+          description: Project id.
+          example: 1234
+          readOnly: true
+        name:
+          type: string
+          description: Project name.
+          example: My project
+        color:
+          type: integer
+          minimum: 30
+          maximum: 49
+          description: Color id. It’s a value between 30 and 49, refer to [Colors](https://developer.todoist.com/rest/v1/?shell#colors) for more info.
+          readOnly: true
+        parent:
+          type: integer
+          description: ID of parent project (read-only, absent for top-level projects).
+          readOnly: true
+        order:
+          type: integer
+          description: Project position under the same parent (read-only).
+          readOnly: true
+        comment_count:
+          type: string
+          description: Number of project comments.
+          example: 10
+          readOnly: true
+        shared:
+          type: boolean
+          description: Whether the project is shared (read-only, a true or false value).
+          readOnly: true
+        inbox_project:
+          type: boolean
+          description: Whether the project is Inbox (read-only, true or otherwise this property is not sent).
+          readOnly: true
+        team_inbox:
+          type: boolean
+          description: Whether the project is TeamInbox (read-only, true or otherwise this property is not sent).
+          readOnly: true
+    Section:
+      properties:
+        id:
+          type: integer
+          description: Section ID
+          example: 1234
+          readOnly: true
+        project_id:
+          type: integer
+          description: ID of the project section belongs to
+          example: 5678
+        order:
+          type: integer
+          description: Project position under the same parent (read-only).
+          readOnly: true
+        name:
+          type: string
+          description: Project name.
+          example: My project
+    Task:
+      properties:
+        id:
+          type: integer
+          description: Task id.
+          readOnly: true
+        project_id:
+          type: integer
+          description: Task’s project id (read-only).
+        section_id:
+          type: integer
+          description: ID of section task belongs to.
+        content:
+          type: string
+          description: Task content.
+        completed:
+          type: boolean
+          description: Flag to mark completed tasks.
+          readOnly: true
+        label_ids:
+          type: array
+          items:
+            type: integer
+          description: Array of label ids, associated with a task.
+        parent:
+          type: integer
+          description: ID of parent task (read-only, absent for top-level tasks).
+        order:
+          type: integer
+          description: Position under the same parent or project for top-level tasks (read-only).
+        priority:
+          type: integer
+          description: Task priority from 1 (normal, default value) to 4 (urgent).
+        due:
+          $ref: '#/components/schemas/Due'
+        url:
+          type: string
+          description: URL to access this task in Todoist web interface.
+          readOnly: true
+        comment_count:
+          type: integer
+          description: Number of task comments.
+          readOnly: true
+    Due:
+      properties:
+        string:
+          type: string
+          description: Human defined date in arbitrary format.
+        date:
+          type: string
+          description: Date in format YYYY-MM-DD corrected to user’s timezone.
+        datetime:
+          type: string
+          description: Only returned if exact due time set (i.e. it’s not a whole-day task), date and time in RFC3339 format in UTC.
+        timezone:
+          type: string
+          description: Only returned if exact due time set, user’s timezone definition either in tzdata-compatible format (“Europe/Berlin”) or as a string specifying east of UTC offset as “UTC±HH:MM” (i.e. “UTC-01:00”).
+
+
+  securitySchemes:
+    BearerToken:
+      type: http
+      scheme: bearer
+    OAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://todoist.com/oauth/authorize
+          tokenUrl: https://todoist.com/oauth/access_token
+          scopes:
+            task:add: Grants permission to add tasks to the Inbox project (the application cannot read tasks data). This is only used by the helper method of adding an item.
+            data:read: Grants read-only access to application data, including tasks, projects, labels, and filters.
+            data:read_write: Grants read and write access to application data, including tasks, projects, labels, and filters. This scope includes task:add and data:read scopes.
+            data:delete: Grants permission to delete application data, including tasks, labels, and filters.
+            project:delete: Grants permission to delete projects.
+
+security:
+- BearerToken: []
+- OAuth2:
+  - task:add
+  - data:read
+  - data:read_write
+  - data:delete
+  - project:delete
