@@ -2,6 +2,7 @@ package hu.aut.bme.matesebi.todocoach.db
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import hu.aut.bme.matesebi.todocoach.db.entities.ProjectEntity
 import hu.aut.bme.matesebi.todocoach.db.entities.TaskEntity
 
@@ -13,6 +14,9 @@ import hu.aut.bme.matesebi.todocoach.db.entities.TaskEntity
         ProjectEntity::class,
         TaskEntity::class
     ]
+)
+@TypeConverters(
+    IntListConverter::class
 )
 abstract class TodoDatabase : RoomDatabase() {
 

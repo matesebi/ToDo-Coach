@@ -1,5 +1,6 @@
 package hu.aut.bme.matesebi.todocoach.db.entities
 
+import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
@@ -15,6 +16,7 @@ data class TaskEntity (
     val parent: Int,
     val order: Int,
     val priority: Int,
+    @Embedded
     val due: Due,
     val url: String,
     val commentCount: Int

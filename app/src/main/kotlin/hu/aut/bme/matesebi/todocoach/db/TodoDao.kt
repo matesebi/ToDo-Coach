@@ -16,7 +16,7 @@ interface TodoDao {
     fun addProject(projectEntity: ProjectEntity)
 
     @Query("SELECT * FROM tasks")
-    fun getAllTasks(): List<ProjectEntity>
+    fun getAllTasks(): List<TaskEntity>
 
     @Insert(onConflict = REPLACE)
     fun addTask(taskEntity: TaskEntity)
