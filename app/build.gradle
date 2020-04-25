@@ -21,6 +21,23 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8.toString()
+    }
+
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+        androidTest.java.srcDirs += 'src/androidTest/kotlin'
+        androidTest.java.srcDirs += 'src/mock/kotlin'
+        test.java.srcDirs += 'src/test/kotlin'
+        test.java.srcDirs += 'src/mock/kotlin'
+    }
     kapt {
         generateStubs = true
     }
@@ -35,13 +52,20 @@ dependencies {
     implementation 'androidx.recyclerview:recyclerview:1.0.0'
     implementation 'com.google.android.material:material:1.0.0'
 
+    implementation 'com.squareup.retrofit2:retrofit:2.8.1'
+    implementation 'com.squareup.okhttp3:okhttp:4.5.0'
+    implementation 'com.squareup.okhttp3:logging-interceptor:4.5.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.8.1'
+    implementation 'com.google.code.gson:gson:2.8.6'
+
+    implementation 'androidx.room:room-runtime:2.2.5'
+    kapt 'androidx.room:room-compiler:2.2.5'
+
     api 'com.google.dagger:dagger:2.27'
     api 'com.google.dagger:dagger-android:2.27'
     api 'com.google.dagger:dagger-android-support:2.27'
-
     annotationProcessor 'com.google.dagger:dagger-compiler:2.27'
     kapt 'com.google.dagger:dagger-compiler:2.27'
-
     annotationProcessor 'com.google.dagger:dagger-android-processor:2.27'
     kapt 'com.google.dagger:dagger-android-processor:2.27'
 
