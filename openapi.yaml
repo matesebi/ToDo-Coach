@@ -107,11 +107,6 @@ paths:
         description: Filter tasks by project id.
         schema:
           type: integer
-      - in: query
-        name: label_id
-        description: Filter tasks by label.
-        schema:
-          type: integer
       responses:
         200:
           $ref: '#/components/responses/TaskList'
