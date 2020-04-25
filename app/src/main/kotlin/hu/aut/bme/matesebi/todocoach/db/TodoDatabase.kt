@@ -3,6 +3,7 @@ package hu.aut.bme.matesebi.todocoach.db
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import hu.aut.bme.matesebi.todocoach.db.converters.IntListConverter
 import hu.aut.bme.matesebi.todocoach.db.entities.ProjectEntity
 import hu.aut.bme.matesebi.todocoach.db.entities.TaskEntity
 

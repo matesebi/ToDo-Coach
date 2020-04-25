@@ -12,7 +12,7 @@ class MockTodoDao: TodoDao {
         TODO("Not yet implemented")
     }
 
-    override fun getAllTasks(): List<ProjectEntity> {
+    override fun getAllTasks(): List<TaskEntity> {
         TODO("Not yet implemented")
     }
 
