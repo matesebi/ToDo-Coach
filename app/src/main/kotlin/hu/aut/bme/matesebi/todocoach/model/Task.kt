@@ -1,7 +1,7 @@
 package hu.aut.bme.matesebi.todocoach.model
 
 data class Task (
-    val id: Int? = null,
+    val id: Long? = null,
     val projectId: Int? = null,
     val sectionId: Int? = null,
     val content: String? = null,

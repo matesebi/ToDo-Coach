@@ -1,7 +1,10 @@
 package hu.aut.bme.matesebi.todocoach.ui.list
 
-import hu.aut.bme.matesebi.todocoach.model.DummyContent
+import androidx.annotation.UiThread
+import hu.aut.bme.matesebi.todocoach.model.Task
 
 interface ListScreen {
-    fun showItems(items: List<DummyContent>)
+
+    @UiThread
+    fun showItems(items: List<Task>)
 }

@@ -1,8 +1,8 @@
 package hu.aut.bme.matesebi.todocoach.network
 
-import retrofit2.http.FormUrlEncoded
-import retrofit2.http.POST
-import retrofit2.http.QueryMap
+import com.google.gson.annotations.SerializedName
+import retrofit2.Call
+import retrofit2.http.*
 
 interface OAuthApi {
 
@@ -12,5 +12,12 @@ interface OAuthApi {
 
     @POST("access_token")
     @FormUrlEncoded
-    fun getAccessCode(@QueryMap queryParams: Map<String, String>)
+    @Headers("Accept: application/json")
+    fun getAccessCode(
+        @Field("client_id") clientId: String,
+        @Field("client_secret") clientSecret: String,
+        @Field("code") code: String
+    ): Call<AccessToken>
+
+    class AccessToken(@SerializedName("access_token") val accessToken: String)
 }
