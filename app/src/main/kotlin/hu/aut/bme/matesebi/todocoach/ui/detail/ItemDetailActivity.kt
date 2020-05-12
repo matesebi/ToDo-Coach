@@ -1,14 +1,26 @@
 package hu.aut.bme.matesebi.todocoach.ui.detail
 
 import android.content.Intent
+import android.graphics.BlendMode
+import android.graphics.BlendModeColorFilter
+import android.graphics.Color
+import android.graphics.PorterDuff
 import android.os.Bundle
+import android.view.Display
 import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
 import android.view.MenuItem
 import hu.aut.bme.matesebi.todocoach.R
+import hu.aut.bme.matesebi.todocoach.injector
 import hu.aut.bme.matesebi.todocoach.model.DummyContent
+import hu.aut.bme.matesebi.todocoach.model.Task
 import hu.aut.bme.matesebi.todocoach.ui.list.ItemListActivity
 import kotlinx.android.synthetic.main.activity_item_detail.*
+import kotlinx.android.synthetic.main.item_detail.*
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+import kotlin.math.absoluteValue
 
 /**
  * An activity representing a single Item detail screen. This
@@ -18,32 +30,39 @@ import kotlinx.android.synthetic.main.activity_item_detail.*
  */
 class ItemDetailActivity : AppCompatActivity(), DetailScreen {
 
+    @Inject
+    lateinit var detailPresenter: DetailPresenter
+
+    lateinit var fragment: ItemDetailFragment
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_item_detail)
         setSupportActionBar(detail_toolbar)
 
+        injector.inject(this)
+        detailPresenter.attachScreen(this)
         fab.setOnClickListener { view ->
-            Snackbar.make(view, "Replace with your own detail action", Snackbar.LENGTH_LONG)
-                    .setAction("Action", null).show()
+
+            MainScope().launch {
+                if (fragment.task == null) {
+                    Snackbar.make(view, "No task", Snackbar.LENGTH_LONG).show()
+                }
+
+                fragment.task?.let {
+                    Snackbar.make(view, "Complete", Snackbar.LENGTH_LONG).show()
+                    detailPresenter.completeTask(it)
+                }
+            }
         }
 
         // Show the Up button in the action bar.
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-        // savedInstanceState is non-null when there is fragment state
-        // saved from previous configurations of this activity
-        // (e.g. when rotating the screen from portrait to landscape).
-        // In this case, the fragment will automatically be re-added
-        // to its container so we don't need to manually add it.
-        // For more information, see the Fragments API guide at:
-        //
-        // http://developer.android.com/guide/components/fragments.html
-        //
         if (savedInstanceState == null) {
             // Create the detail fragment and add it to the activity
             // using a fragment transaction.
-            val fragment = ItemDetailFragment().apply {
+            fragment = ItemDetailFragment(detailPresenter).apply {
                 arguments = Bundle().apply {
                     putString(
                         ItemDetailFragment.ARG_ITEM_ID,
@@ -72,7 +91,23 @@ class ItemDetailActivity : AppCompatActivity(), DetailScreen {
                 else -> super.onOptionsItemSelected(item)
             }
 
-    override fun showDetails(item: DummyContent) {
-        TODO("Not yet implemented")
+    override fun showDetails(task: Task) {
+        fragment.task = task
+        runOnUiThread {
+            taskDetailContentTV.text = task.content
+            taskDetailDueTV.text = task.due?.string
+            val colorId = when(task.priority) {
+                1 -> R.color.priorityLow
+                2 -> R.color.priorityNormal
+                3 -> R.color.priorityMedium
+                else -> R.color.priorityHigh
+            }
+            val color = resources.getColor(colorId, theme)
+            taskDetailPriorityIV.drawable.setTint(color)
+        }
+    }
+
+    override fun navigateBack() {
+        navigateUpTo(Intent(this, ItemListActivity::class.java))
     }
 }

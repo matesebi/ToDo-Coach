@@ -1,7 +1,8 @@
 package hu.aut.bme.matesebi.todocoach.ui.detail
 
-import hu.aut.bme.matesebi.todocoach.model.DummyContent
+import hu.aut.bme.matesebi.todocoach.model.Task
 
 interface DetailScreen {
-    fun showDetails(item: DummyContent)
+    fun showDetails(task: Task)
+    fun navigateBack()
 }

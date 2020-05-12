@@ -1,10 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
-<TextView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/item_detail"
-    style="?android:attr/textAppearanceLarge"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:padding="16dp"
-    android:textIsSelectable="true"
-    tools:context=".ui.detail.ItemDetailFragment" />
+<androidx.constraintlayout.widget.ConstraintLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" xmlns:app="http://schemas.android.com/apk/res-auto"
+        tools:context=".ui.detail.ItemDetailFragment"
+        android:paddingHorizontal="8dp">
+
+    <TextView
+            android:id="@+id/taskDetailContentTV"
+            style="?android:attr/textAppearanceLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="16dp"
+            android:textIsSelectable="true"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginTop="10dp"
+            android:textSize="36sp"
+            android:textAlignment="center"/>
+    <TextView
+            android:id="@+id/taskDetailDueTV"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/taskDetailPriorityIV"
+            app:layout_constraintHorizontal_weight="1"
+            app:layout_constraintTop_toBottomOf="@id/taskDetailContentTV"
+            app:layout_constraintBottom_toBottomOf="@id/taskDetailPriorityIV"
+            android:textSize="24sp"
+            android:textAlignment="center"/>
+
+    <ImageView
+            android:id="@+id/taskDetailPriorityIV"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toEndOf="@id/taskDetailDueTV"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/taskDetailContentTV"
+            android:contentDescription="Priority"
+            app:layout_constraintHorizontal_weight="1"
+            android:clickable="false"
+            android:src="@drawable/ic_arrow_upward_black_24dp"/>
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
