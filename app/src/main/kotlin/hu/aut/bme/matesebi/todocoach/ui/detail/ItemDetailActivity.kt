@@ -10,6 +10,7 @@ import android.view.Display
 import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
 import android.view.MenuItem
+import androidx.core.content.ContextCompat
 import hu.aut.bme.matesebi.todocoach.R
 import hu.aut.bme.matesebi.todocoach.injector
 import hu.aut.bme.matesebi.todocoach.model.DummyContent
@@ -102,7 +103,7 @@ class ItemDetailActivity : AppCompatActivity(), DetailScreen {
                 3 -> R.color.priorityMedium
                 else -> R.color.priorityHigh
             }
-            val color = resources.getColor(colorId, theme)
+            val color = ContextCompat.getColor(this, colorId)
             taskDetailPriorityIV.drawable.setTint(color)
         }
     }
