@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "326619230466",
+    "firebase_url": "https://todo-coach-6d630.firebaseio.com",
+    "project_id": "todo-coach-6d630",
+    "storage_bucket": "todo-coach-6d630.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:326619230466:android:070c8f5e820ceb1b34121b",
+        "android_client_info": {
+          "package_name": "hu.aut.bme.matesebi.todocoach"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "326619230466-7hs774utgugoc1igejlqi3i371fe9rc5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAwxjHhIGIMYgYgVN8YM2GaGoLA6t34QDM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "326619230466-7hs774utgugoc1igejlqi3i371fe9rc5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
