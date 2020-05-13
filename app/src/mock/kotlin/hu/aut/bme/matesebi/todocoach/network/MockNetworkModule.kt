@@ -19,10 +19,10 @@ class MockNetworkModule {
 
     @Provides
     @Singleton
-    fun provideOAuthApi(client: OkHttpClient): OAuthApi = MockOAuthApi()
+    fun provideOAuthApi(): OAuthApi = MockOAuthApi()
 
     @Provides
     @Singleton
-    fun provideTodoApi(client: OkHttpClient): TodoApi = MockTodoApi()
+    fun provideTodoApi(): TodoApi = MockTodoApi()
 
 }
