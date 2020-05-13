@@ -1,7 +1,7 @@
 package hu.aut.bme.matesebi.todocoach.model
 
 data class Project(
-    val id: Int? = null,
+    val id: Long? = null,
     val name: String? = null,
     val color: Int? = null,
     val parent: Int? = null,

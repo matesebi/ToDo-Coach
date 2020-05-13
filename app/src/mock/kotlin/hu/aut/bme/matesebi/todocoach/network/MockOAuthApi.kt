@@ -5,7 +5,8 @@ class MockOAuthApi: OAuthApi {
         TODO("Not yet implemented")
     }
 
-    override fun getAccessCode(queryParams: Map<String, String>) {
+    override suspend fun getAccessCode(clientId: String, clientSecret: String, code: String): OAuthApi.AccessToken {
         TODO("Not yet implemented")
     }
+
 }

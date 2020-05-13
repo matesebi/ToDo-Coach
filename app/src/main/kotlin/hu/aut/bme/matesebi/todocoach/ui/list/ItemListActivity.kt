@@ -1,24 +1,26 @@
 package hu.aut.bme.matesebi.todocoach.ui.list
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.snackbar.Snackbar
-import android.view.LayoutInflater
+import android.util.Log
 import android.view.View
-import android.view.ViewGroup
-import android.widget.TextView
-import hu.aut.bme.matesebi.todocoach.ui.Presenter
-import hu.aut.bme.matesebi.todocoach.ui.detail.ItemDetailActivity
-import hu.aut.bme.matesebi.todocoach.ui.detail.ItemDetailFragment
+import android.widget.EditText
+import android.widget.RatingBar
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import hu.aut.bme.matesebi.todocoach.R
 import hu.aut.bme.matesebi.todocoach.injector
-
-import hu.aut.bme.matesebi.todocoach.model.DummyContent
+import hu.aut.bme.matesebi.todocoach.interactor.user.UserInteractor
+import hu.aut.bme.matesebi.todocoach.model.Task
+import hu.aut.bme.matesebi.todocoach.ui.detail.DetailPresenter
+import hu.aut.bme.matesebi.todocoach.ui.detail.ItemDetailActivity
+import hu.aut.bme.matesebi.todocoach.ui.detail.ItemDetailFragment
 import kotlinx.android.synthetic.main.activity_item_list.*
-import kotlinx.android.synthetic.main.item_list_content.view.*
 import kotlinx.android.synthetic.main.item_list.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
@@ -29,7 +31,7 @@ import javax.inject.Inject
  * item details. On tablets, the activity presents the list of items and
  * item details side-by-side using two vertical panes.
  */
-class ItemListActivity : AppCompatActivity(), ListScreen {
+class ItemListActivity : AppCompatActivity(), ListScreen, TaskListAdapter.Listener {
 
     /**
      * Whether or not the activity is in two-pane mode, i.e. running on a tablet
@@ -38,7 +40,16 @@ class ItemListActivity : AppCompatActivity(), ListScreen {
     private var twoPane: Boolean = false
 
     @Inject
+    lateinit var userInteractor: UserInteractor
+
+    @Inject
     lateinit var presenter: ListPresenter
+
+    @Inject
+    lateinit var detailPresenter: DetailPresenter
+
+    private lateinit var taskListAdapter: TaskListAdapter
+    private lateinit var scope: CoroutineScope
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,85 +60,99 @@ class ItemListActivity : AppCompatActivity(), ListScreen {
 
         injector.inject(this)
         presenter.attachScreen(this)
-        fab.setOnClickListener { view ->
-            presenter.refreshList()
-        }
+        taskListAdapter = TaskListAdapter(this)
+        item_list.adapter = taskListAdapter
+
+        fab.setOnClickListener { v -> fabOnClickListener(v) }
 
         if (item_detail_container != null) {
-            // The detail container view will be present only in the
-            // large-screen layouts (res/values-w900dp).
-            // If this view is present, then the
-            // activity should be in two-pane mode.
             twoPane = true
         }
-
-        setupRecyclerView(item_list)
+        scope = MainScope()
     }
 
-    private fun setupRecyclerView(recyclerView: RecyclerView) {
-        recyclerView.adapter =
-            SimpleItemRecyclerViewAdapter(
-                this,
-                DummyContent.ITEMS,
-                twoPane
-            )
-    }
-
-    class SimpleItemRecyclerViewAdapter(private val parentActivity: ItemListActivity,
-                                        private val values: List<DummyContent.DummyItem>,
-                                        private val twoPane: Boolean) :
-            RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.ViewHolder>() {
-
-        private val onClickListener: View.OnClickListener
-
-        init {
-            onClickListener = View.OnClickListener { v ->
-                val item = v.tag as DummyContent.DummyItem
-                if (twoPane) {
-                    val fragment = ItemDetailFragment().apply {
-                        arguments = Bundle().apply {
-                            putString(ItemDetailFragment.ARG_ITEM_ID, item.id)
-                        }
-                    }
-                    parentActivity.supportFragmentManager
-                            .beginTransaction()
-                            .replace(R.id.item_detail_container, fragment)
-                            .commit()
-                } else {
-                    val intent = Intent(v.context, ItemDetailActivity::class.java).apply {
-                        putExtra(ItemDetailFragment.ARG_ITEM_ID, item.id)
-                    }
-                    v.context.startActivity(intent)
+    private fun fabOnClickListener(view: View) {
+        with(AlertDialog.Builder(view.context)) {
+            setTitle("Add a new Task")
+            val layout = layoutInflater.inflate(R.layout.add_task_dialog, null)
+            val addTaskContentET = layout.findViewById<EditText>(R.id.addTaskContentET)
+            val addTaskPriorityRating = layout.findViewById<RatingBar>(R.id.addTaskPriorityRating)
+            setView(layout)
+            setNegativeButton("Cancel", null)
+            setPositiveButton("Create") { _, _ ->
+                scope.launch {
+                    presenter.createTask(
+                        addTaskContentET.text.toString(),
+                        addTaskPriorityRating.rating.toInt(),
+                        "2020-05-14"
+                    )
                 }
             }
-        }
-
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-            val view = LayoutInflater.from(parent.context)
-                    .inflate(R.layout.item_list_content, parent, false)
-            return ViewHolder(view)
-        }
-
-        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-            val item = values[position]
-            holder.idView.text = item.id
-            holder.contentView.text = item.content
-
-            with(holder.itemView) {
-                tag = item
-                setOnClickListener(onClickListener)
-            }
-        }
-
-        override fun getItemCount() = values.size
-
-        inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-            val idView: TextView = view.id_text
-            val contentView: TextView = view.content
+            show()
         }
     }
 
-    override fun showItems(items: List<DummyContent>) {
-        Snackbar.make(item_list, "Showing new items", Snackbar.LENGTH_LONG).show()
+    override fun onStart() {
+        super.onStart()
+
+    }
+
+    override fun onResume() {
+
+        super.onResume()
+        val uri = intent.data
+        uri?.also {
+            uri.getQueryParameter("code")?.also {
+                Log.d("asdasd", "code: $it")
+//                Toast.makeText(this, "code: $it", Toast.LENGTH_LONG).show()
+//                authInterceptor.getToken(uri.getQueryParameter("code"))
+                userInteractor.authCode = it
+            }
+            uri.getQueryParameter("access_token")?.also {
+                Log.d("asdasd", "access_token: $it")
+//                Toast.makeText(this, "access_token: $it", Toast.LENGTH_LONG).show()
+//                authInterceptor.token = it
+            }
+        }
+        scope.launch {
+            if (!userInteractor.isAuthorized()){
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(userInteractor.getAuthorizationUrl()))
+                startActivity(intent)
+            } else {
+                presenter.refreshList()
+            }
+        }
+    }
+
+    override fun showItems(items: List<Task>) {
+        runOnUiThread {
+//            Snackbar.make(item_list, "Showing new items", Snackbar.LENGTH_LONG).show()
+            taskListAdapter.submitList(items)
+        }
+    }
+
+    override fun onTaskClicked(task: Task) {
+        if (twoPane) {
+            val fragment = ItemDetailFragment(detailPresenter).apply {
+                arguments = Bundle().apply {
+                    putString(ItemDetailFragment.ARG_ITEM_ID, task.id.toString())
+                }
+            }
+            this.supportFragmentManager
+                .beginTransaction()
+                .replace(R.id.item_detail_container, fragment)
+                .commit()
+        } else {
+            val intent = Intent(this, ItemDetailActivity::class.java).apply {
+                putExtra(ItemDetailFragment.ARG_ITEM_ID, task.id.toString())
+            }
+            startActivity(intent)
+        }
+    }
+
+    override fun onTaskCompleted(task: Task) {
+        scope.launch {
+            presenter.completeTask(task)
+        }
     }
 }

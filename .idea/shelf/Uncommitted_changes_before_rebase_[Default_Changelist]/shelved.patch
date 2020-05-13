@@ -1,0 +1,548 @@
+Index: app/src/main/kotlin/hu/aut/bme/matesebi/todocoach/interactor/list/ListInteractor.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package hu.aut.bme.matesebi.todocoach.interactor.list\n\nimport hu.aut.bme.matesebi.todocoach.db.TodoDao\nimport hu.aut.bme.matesebi.todocoach.model.DummyContent\nimport hu.aut.bme.matesebi.todocoach.network.TodoApi\nimport javax.inject.Inject\n\nclass ListInteractor @Inject constructor(todoApi: TodoApi, todoDao: TodoDao) {\n    fun getItems(): List<DummyContent> {\n        return emptyList()\n    }\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/kotlin/hu/aut/bme/matesebi/todocoach/interactor/list/ListInteractor.kt	(revision 8f440f3370ea409ac5288dc04fb55959320aeb3f)
++++ app/src/main/kotlin/hu/aut/bme/matesebi/todocoach/interactor/list/ListInteractor.kt	(date 1589235569664)
+@@ -1,12 +1,18 @@
+ package hu.aut.bme.matesebi.todocoach.interactor.list
+ 
++import android.util.Log
+ import hu.aut.bme.matesebi.todocoach.db.TodoDao
+ import hu.aut.bme.matesebi.todocoach.model.DummyContent
++import hu.aut.bme.matesebi.todocoach.model.Task
+ import hu.aut.bme.matesebi.todocoach.network.TodoApi
+ import javax.inject.Inject
+ 
+-class ListInteractor @Inject constructor(todoApi: TodoApi, todoDao: TodoDao) {
+-    fun getItems(): List<DummyContent> {
+-        return emptyList()
++class ListInteractor @Inject constructor(val todoApi: TodoApi, val todoDao: TodoDao) {
++    suspend fun getItems(): List<Task> {
++        val tasks = todoApi.getTasks("Bearer df1f3d82f913d6f725dea3a2e4e35cc7d112b307")
++        tasks.forEach {
++            Log.d("load_tasks", "Task loaded: $it")
++        }
++        return tasks
+     }
+ }
+\ No newline at end of file
+Index: app/src/main/kotlin/hu/aut/bme/matesebi/todocoach/ui/list/ItemListActivity.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package hu.aut.bme.matesebi.todocoach.ui.list\n\nimport android.content.Intent\nimport android.os.Bundle\nimport androidx.appcompat.app.AppCompatActivity\nimport androidx.recyclerview.widget.RecyclerView\nimport com.google.android.material.snackbar.Snackbar\nimport android.view.LayoutInflater\nimport android.view.View\nimport android.view.ViewGroup\nimport android.widget.TextView\nimport hu.aut.bme.matesebi.todocoach.ui.Presenter\nimport hu.aut.bme.matesebi.todocoach.ui.detail.ItemDetailActivity\nimport hu.aut.bme.matesebi.todocoach.ui.detail.ItemDetailFragment\nimport hu.aut.bme.matesebi.todocoach.R\nimport hu.aut.bme.matesebi.todocoach.injector\n\nimport hu.aut.bme.matesebi.todocoach.model.DummyContent\nimport kotlinx.android.synthetic.main.activity_item_list.*\nimport kotlinx.android.synthetic.main.item_list_content.view.*\nimport kotlinx.android.synthetic.main.item_list.*\nimport javax.inject.Inject\n\n/**\n * An activity representing a list of Pings. This activity\n * has different presentations for handset and tablet-size devices. On\n * handsets, the activity presents a list of items, which when touched,\n * lead to a [ItemDetailActivity] representing\n * item details. On tablets, the activity presents the list of items and\n * item details side-by-side using two vertical panes.\n */\nclass ItemListActivity : AppCompatActivity(), ListScreen {\n\n    /**\n     * Whether or not the activity is in two-pane mode, i.e. running on a tablet\n     * device.\n     */\n    private var twoPane: Boolean = false\n\n    @Inject\n    lateinit var presenter: ListPresenter\n\n    override fun onCreate(savedInstanceState: Bundle?) {\n        super.onCreate(savedInstanceState)\n        setContentView(R.layout.activity_item_list)\n\n        setSupportActionBar(toolbar)\n        toolbar.title = title\n\n        injector.inject(this)\n        presenter.attachScreen(this)\n        fab.setOnClickListener { view ->\n            presenter.refreshList()\n        }\n\n        if (item_detail_container != null) {\n            // The detail container view will be present only in the\n            // large-screen layouts (res/values-w900dp).\n            // If this view is present, then the\n            // activity should be in two-pane mode.\n            twoPane = true\n        }\n\n        setupRecyclerView(item_list)\n    }\n\n    private fun setupRecyclerView(recyclerView: RecyclerView) {\n        recyclerView.adapter =\n            SimpleItemRecyclerViewAdapter(\n                this,\n                DummyContent.ITEMS,\n                twoPane\n            )\n    }\n\n    class SimpleItemRecyclerViewAdapter(private val parentActivity: ItemListActivity,\n                                        private val values: List<DummyContent.DummyItem>,\n                                        private val twoPane: Boolean) :\n            RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.ViewHolder>() {\n\n        private val onClickListener: View.OnClickListener\n\n        init {\n            onClickListener = View.OnClickListener { v ->\n                val item = v.tag as DummyContent.DummyItem\n                if (twoPane) {\n                    val fragment = ItemDetailFragment().apply {\n                        arguments = Bundle().apply {\n                            putString(ItemDetailFragment.ARG_ITEM_ID, item.id)\n                        }\n                    }\n                    parentActivity.supportFragmentManager\n                            .beginTransaction()\n                            .replace(R.id.item_detail_container, fragment)\n                            .commit()\n                } else {\n                    val intent = Intent(v.context, ItemDetailActivity::class.java).apply {\n                        putExtra(ItemDetailFragment.ARG_ITEM_ID, item.id)\n                    }\n                    v.context.startActivity(intent)\n                }\n            }\n        }\n\n        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {\n            val view = LayoutInflater.from(parent.context)\n                    .inflate(R.layout.item_list_content, parent, false)\n            return ViewHolder(view)\n        }\n\n        override fun onBindViewHolder(holder: ViewHolder, position: Int) {\n            val item = values[position]\n            holder.idView.text = item.id\n            holder.contentView.text = item.content\n\n            with(holder.itemView) {\n                tag = item\n                setOnClickListener(onClickListener)\n            }\n        }\n\n        override fun getItemCount() = values.size\n\n        inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {\n            val idView: TextView = view.id_text\n            val contentView: TextView = view.content\n        }\n    }\n\n    override fun showItems(items: List<DummyContent>) {\n        Snackbar.make(item_list, \"Showing new items\", Snackbar.LENGTH_LONG).show()\n    }\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/kotlin/hu/aut/bme/matesebi/todocoach/ui/list/ItemListActivity.kt	(revision 8f440f3370ea409ac5288dc04fb55959320aeb3f)
++++ app/src/main/kotlin/hu/aut/bme/matesebi/todocoach/ui/list/ItemListActivity.kt	(date 1589235569698)
+@@ -2,23 +2,27 @@
+ 
+ import android.content.Intent
+ import android.os.Bundle
+-import androidx.appcompat.app.AppCompatActivity
+-import androidx.recyclerview.widget.RecyclerView
+-import com.google.android.material.snackbar.Snackbar
+ import android.view.LayoutInflater
+ import android.view.View
+ import android.view.ViewGroup
++import android.widget.CheckBox
+ import android.widget.TextView
+-import hu.aut.bme.matesebi.todocoach.ui.Presenter
+-import hu.aut.bme.matesebi.todocoach.ui.detail.ItemDetailActivity
+-import hu.aut.bme.matesebi.todocoach.ui.detail.ItemDetailFragment
++import androidx.appcompat.app.AppCompatActivity
++import androidx.recyclerview.widget.ListAdapter
++import androidx.recyclerview.widget.RecyclerView
++import com.google.android.material.snackbar.Snackbar
+ import hu.aut.bme.matesebi.todocoach.R
+ import hu.aut.bme.matesebi.todocoach.injector
+-
+ import hu.aut.bme.matesebi.todocoach.model.DummyContent
++import hu.aut.bme.matesebi.todocoach.model.Task
++import hu.aut.bme.matesebi.todocoach.ui.detail.ItemDetailActivity
++import hu.aut.bme.matesebi.todocoach.ui.detail.ItemDetailFragment
+ import kotlinx.android.synthetic.main.activity_item_list.*
++import kotlinx.android.synthetic.main.item_list.*
+ import kotlinx.android.synthetic.main.item_list_content.view.*
+-import kotlinx.android.synthetic.main.item_list.*
++import kotlinx.android.synthetic.main.todo_row.view.*
++import kotlinx.coroutines.GlobalScope
++import kotlinx.coroutines.launch
+ import javax.inject.Inject
+ 
+ /**
+@@ -40,6 +44,8 @@
+     @Inject
+     lateinit var presenter: ListPresenter
+ 
++    private lateinit var taskListAdapter: TaskListAdapter
++
+     override fun onCreate(savedInstanceState: Bundle?) {
+         super.onCreate(savedInstanceState)
+         setContentView(R.layout.activity_item_list)
+@@ -48,20 +54,39 @@
+         toolbar.title = title
+ 
+         injector.inject(this)
++
+         presenter.attachScreen(this)
++        taskListAdapter = TaskListAdapter()
++        item_list.adapter = taskListAdapter
+         fab.setOnClickListener { view ->
+-            presenter.refreshList()
++//            presenter.refreshList()
+         }
+ 
+         if (item_detail_container != null) {
+-            // The detail container view will be present only in the
+-            // large-screen layouts (res/values-w900dp).
+-            // If this view is present, then the
+-            // activity should be in two-pane mode.
+             twoPane = true
+         }
++//        setupRecyclerView(item_list)
+ 
+-        setupRecyclerView(item_list)
++        GlobalScope.launch {
++            presenter.refreshList()
++        }
++    }
++
++    override fun onResume() {
++        super.onResume()
++//        val uri = intent.data
++//        uri?.also {
++//            uri.getQueryParameter("code")?.also {
++//                Toast.makeText(this, "code: $it", Toast.LENGTH_LONG).show()
++//                authInterceptor.getToken(uri.getQueryParameter("code"))
++//                Log.d("asdasd", "code: $it")
++//            }
++//            uri.getQueryParameter("access_token")?.also {
++//                Toast.makeText(this, "access_token: $it", Toast.LENGTH_LONG).show()
++//                authInterceptor.token = it
++//                Log.d("asdasd", "access_token: $it")
++//            }
++//        }
+     }
+ 
+     private fun setupRecyclerView(recyclerView: RecyclerView) {
+@@ -73,11 +98,19 @@
+             )
+     }
+ 
+-    class SimpleItemRecyclerViewAdapter(private val parentActivity: ItemListActivity,
+-                                        private val values: List<DummyContent.DummyItem>,
+-                                        private val twoPane: Boolean) :
+-            RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.ViewHolder>() {
++    class SimpleItemRecyclerViewAdapter(
++        private val parentActivity: ItemListActivity,
++        private val values: MutableList<DummyContent.DummyItem>,
++        private val twoPane: Boolean
++    ) :
++        RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.ViewHolder>() {
+ 
++        fun submit(list: List<DummyContent.DummyItem>) {
++            values.clear()
++            values.addAll(list)
++
++        }
++
+         private val onClickListener: View.OnClickListener
+ 
+         init {
+@@ -90,9 +123,9 @@
+                         }
+                     }
+                     parentActivity.supportFragmentManager
+-                            .beginTransaction()
+-                            .replace(R.id.item_detail_container, fragment)
+-                            .commit()
++                        .beginTransaction()
++                        .replace(R.id.item_detail_container, fragment)
++                        .commit()
+                 } else {
+                     val intent = Intent(v.context, ItemDetailActivity::class.java).apply {
+                         putExtra(ItemDetailFragment.ARG_ITEM_ID, item.id)
+@@ -104,7 +137,7 @@
+ 
+         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+             val view = LayoutInflater.from(parent.context)
+-                    .inflate(R.layout.item_list_content, parent, false)
++                .inflate(R.layout.item_list_content, parent, false)
+             return ViewHolder(view)
+         }
+ 
+@@ -127,7 +160,10 @@
+         }
+     }
+ 
+-    override fun showItems(items: List<DummyContent>) {
+-        Snackbar.make(item_list, "Showing new items", Snackbar.LENGTH_LONG).show()
++    override fun showItems(items: List<Task>) {
++        runOnUiThread {
++            Snackbar.make(item_list, "Showing new items", Snackbar.LENGTH_LONG).show()
++            taskListAdapter.submitList(items)
++        }
+     }
+ }
+Index: app/src/main/kotlin/hu/aut/bme/matesebi/todocoach/ui/list/ListPresenter.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package hu.aut.bme.matesebi.todocoach.ui.list\n\nimport hu.aut.bme.matesebi.todocoach.interactor.list.ListInteractor\nimport hu.aut.bme.matesebi.todocoach.ui.Presenter\nimport hu.aut.bme.matesebi.todocoach.model.DummyContent\n\nclass ListPresenter constructor(private val interactor: ListInteractor): Presenter<ListScreen>() {\n    fun showItems(items: List<DummyContent>) {\n        this.screen?.showItems(items)\n    }\n\n    fun refreshList(){\n        showItems(interactor.getItems())\n    }\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/kotlin/hu/aut/bme/matesebi/todocoach/ui/list/ListPresenter.kt	(revision 8f440f3370ea409ac5288dc04fb55959320aeb3f)
++++ app/src/main/kotlin/hu/aut/bme/matesebi/todocoach/ui/list/ListPresenter.kt	(date 1589235569684)
+@@ -1,15 +1,17 @@
+ package hu.aut.bme.matesebi.todocoach.ui.list
+ 
+ import hu.aut.bme.matesebi.todocoach.interactor.list.ListInteractor
+-import hu.aut.bme.matesebi.todocoach.ui.Presenter
+ import hu.aut.bme.matesebi.todocoach.model.DummyContent
++import hu.aut.bme.matesebi.todocoach.ui.Presenter
++import kotlinx.coroutines.Dispatchers
++import kotlinx.coroutines.withContext
+ 
+-class ListPresenter constructor(private val interactor: ListInteractor): Presenter<ListScreen>() {
+-    fun showItems(items: List<DummyContent>) {
+-        this.screen?.showItems(items)
+-    }
++class ListPresenter constructor(private val interactor: ListInteractor) : Presenter<ListScreen>() {
++//    fun showItems(items: List<DummyContent>) {
++//        this.screen?.showItems(items)
++//    }
+ 
+-    fun refreshList(){
+-        showItems(interactor.getItems())
++    suspend fun refreshList() = withContext(Dispatchers.IO) {
++        screen?.showItems(interactor.getItems())
+     }
+ }
+\ No newline at end of file
+Index: app/src/main/res/layout/item_list_content.xml
+===================================================================
+--- app/src/main/res/layout/item_list_content.xml	(revision 8f440f3370ea409ac5288dc04fb55959320aeb3f)
++++ app/src/main/res/layout/item_list_content.xml	(revision 8f440f3370ea409ac5288dc04fb55959320aeb3f)
+@@ -1,20 +0,0 @@
+-<?xml version="1.0" encoding="utf-8"?>
+-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+-    android:layout_width="wrap_content"
+-    android:layout_height="wrap_content"
+-    android:orientation="horizontal">
+-
+-    <TextView
+-        android:id="@+id/id_text"
+-        android:layout_width="wrap_content"
+-        android:layout_height="wrap_content"
+-        android:layout_margin="@dimen/text_margin"
+-        android:textAppearance="?attr/textAppearanceListItem"/>
+-
+-    <TextView
+-        android:id="@+id/content"
+-        android:layout_width="wrap_content"
+-        android:layout_height="wrap_content"
+-        android:layout_margin="@dimen/text_margin"
+-        android:textAppearance="?attr/textAppearanceListItem"/>
+-</LinearLayout>
+\ No newline at end of file
+Index: app/src/main/kotlin/hu/aut/bme/matesebi/todocoach/network/NetworkModule.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package hu.aut.bme.matesebi.todocoach.network\n\nimport dagger.Module\nimport dagger.Provides\nimport okhttp3.OkHttpClient\nimport okhttp3.logging.HttpLoggingInterceptor\nimport retrofit2.Retrofit\nimport retrofit2.converter.gson.GsonConverterFactory\nimport javax.inject.Singleton\n\n@Module\nclass NetworkModule {\n\n    @Provides\n    @Singleton\n    fun provideOkHttpClient(): OkHttpClient {\n        val interceptor = HttpLoggingInterceptor()\n        interceptor.level = HttpLoggingInterceptor.Level.BODY\n        return OkHttpClient.Builder().addInterceptor(interceptor).build()\n    }\n\n    @Provides\n    @Singleton\n    fun provideOAuthApi(client: OkHttpClient): OAuthApi {\n        val retrofit = Retrofit.Builder()\n            .client(client)\n            .baseUrl(NetworkConfig.OAUTH_URL)\n            .addConverterFactory(GsonConverterFactory.create())\n            .build()\n        return retrofit.create(OAuthApi::class.java)\n    }\n\n    @Provides\n    @Singleton\n    fun provideTodoApi(client: OkHttpClient): TodoApi {\n        val retrofit = Retrofit.Builder()\n            .client(client)\n            .baseUrl(NetworkConfig.BASE_URL)\n            .addConverterFactory(GsonConverterFactory.create())\n            .build()\n        return retrofit.create(TodoApi::class.java)\n    }\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/kotlin/hu/aut/bme/matesebi/todocoach/network/NetworkModule.kt	(revision 8f440f3370ea409ac5288dc04fb55959320aeb3f)
++++ app/src/main/kotlin/hu/aut/bme/matesebi/todocoach/network/NetworkModule.kt	(date 1589229480574)
+@@ -1,5 +1,6 @@
+ package hu.aut.bme.matesebi.todocoach.network
+ 
++import android.content.Context
+ import dagger.Module
+ import dagger.Provides
+ import okhttp3.OkHttpClient
+@@ -13,10 +14,17 @@
+ 
+     @Provides
+     @Singleton
+-    fun provideOkHttpClient(): OkHttpClient {
++    fun provideAuthInterceptor() = AuthInterceptor()
++
++    @Provides
++    @Singleton
++    fun provideOkHttpClient(authInterceptor: AuthInterceptor): OkHttpClient {
+         val interceptor = HttpLoggingInterceptor()
+         interceptor.level = HttpLoggingInterceptor.Level.BODY
+-        return OkHttpClient.Builder().addInterceptor(interceptor).build()
++        return OkHttpClient.Builder()
++            .addInterceptor(interceptor)
++//            .addInterceptor(authInterceptor)
++            .build()
+     }
+ 
+     @Provides
+Index: app/src/main/kotlin/hu/aut/bme/matesebi/todocoach/network/TodoApi.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package hu.aut.bme.matesebi.todocoach.network\n\nimport hu.aut.bme.matesebi.todocoach.model.Project\nimport hu.aut.bme.matesebi.todocoach.model.Section\nimport hu.aut.bme.matesebi.todocoach.model.Task\nimport retrofit2.http.*\n\ninterface TodoApi {\n\n    @GET(\"/projects\")\n    fun getProjects(\n        @Header(\"Authorization\") authorization: String\n    ): List<Project>\n\n    @POST(\"/projects\")\n    fun createNewProject(\n        @Header(\"Authorization\") authorization: String,\n        @Body project: Project\n    ): Project\n    \n    @GET(\"/projects/{projectId}\")\n    fun getProject(\n        @Header(\"Authorization\") authorization: String,\n        @Path(\"projectId\") id: String\n    ): Project\n\n    @POST(\"/projects/{projectId}\")\n    fun updateProject(\n        @Header(\"Authorization\") authorization: String,\n        @Path(\"projectId\") id: String,\n        @Body project: Project\n    )\n\n    @DELETE(\"/projects/{projectId}\")\n    fun deleteProject(\n        @Header(\"Authorization\") authorization: String,\n        @Path(\"projectId\") id: String\n    )\n\n    @GET(\"/sections\")\n    fun getSections(\n        @Header(\"Authorization\") authorization: String\n    ): List<Section>\n\n    @POST(\"/sections\")\n    fun createSection(\n        @Header(\"Authorization\") authorization: String,\n        @Body section: Section\n    ): Section\n\n    @GET(\"/sections{sectionId}\")\n    fun getSection(\n        @Header(\"Authorization\") authorization: String,\n        @Path(\"sectionId\") id: String\n    ): Section\n\n    @POST(\"/sections{sectionId}\")\n    fun updateSection(\n        @Header(\"Authorization\") authorization: String,\n        @Path(\"sectionId\") id: String,\n        @Body section: Section\n    )\n\n    @DELETE(\"/sections{sectionId}\")\n    fun deleteSection(\n        @Header(\"Authorization\") authorization: String,\n        @Path(\"sectionId\") id: String\n    )\n\n    @GET(\"/tasks\")\n    fun getTasks(\n        @Header(\"Authorization\") authorization: String,\n        @Query(\"project_id\") project_id: String\n    ): List<Task>\n\n    @POST(\"/tasks\")\n    fun createTask(\n        @Header(\"Authorization\") authorization: String,\n        @Body task: Task\n    ): Task\n\n    @GET(\"/tasks/{taskId}\")\n    fun getTask(\n        @Header(\"Authorization\") authorization: String,\n        @Path(\"taskId\") id: String\n    ): Section\n\n    @POST(\"/tasks/{taskId}\")\n    fun updateTask(\n        @Header(\"Authorization\") authorization: String,\n        @Path(\"taskId\") id: String,\n        @Body task: Task\n    )\n\n    @DELETE(\"/tasks/{taskId}\")\n    fun deleteTask(\n        @Header(\"Authorization\") authorization: String,\n        @Path(\"taskId\") id: String\n    )\n\n    @POST(\"/tasks/{taskId}/close\")\n    fun closeTask(\n        @Header(\"Authorization\") authorization: String,\n        @Path(\"taskId\") id: String\n    )\n\n    @POST(\"/tasks/{taskId}/reopen\")\n    fun reopenTask(\n        @Header(\"Authorization\") authorization: String,\n        @Path(\"taskId\") id: String\n    )\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/kotlin/hu/aut/bme/matesebi/todocoach/network/TodoApi.kt	(revision 8f440f3370ea409ac5288dc04fb55959320aeb3f)
++++ app/src/main/kotlin/hu/aut/bme/matesebi/todocoach/network/TodoApi.kt	(date 1589232662910)
+@@ -3,14 +3,13 @@
+ import hu.aut.bme.matesebi.todocoach.model.Project
+ import hu.aut.bme.matesebi.todocoach.model.Section
+ import hu.aut.bme.matesebi.todocoach.model.Task
++import retrofit2.Call
+ import retrofit2.http.*
+ 
+ interface TodoApi {
+ 
+-    @GET("/projects")
+-    fun getProjects(
+-        @Header("Authorization") authorization: String
+-    ): List<Project>
++    @GET("rest/v1/projects")
++    suspend fun getProjects(@Header("Authorization") authorization: String): List<Project>
+ 
+     @POST("/projects")
+     fun createNewProject(
+@@ -67,10 +66,9 @@
+         @Path("sectionId") id: String
+     )
+ 
+-    @GET("/tasks")
+-    fun getTasks(
+-        @Header("Authorization") authorization: String,
+-        @Query("project_id") project_id: String
++    @GET("rest/v1/tasks")
++    suspend fun getTasks(
++        @Header("Authorization") authorization: String
+     ): List<Task>
+ 
+     @POST("/tasks")
+Index: app/src/main/kotlin/hu/aut/bme/matesebi/todocoach/network/NetworkConfig.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package hu.aut.bme.matesebi.todocoach.network\n\nobject NetworkConfig {\n    const val BASE_URL = \"https://api.todoist.com/rest/v1\"\n    const val OAUTH_URL = \"https://todoist.com/oauth\"\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/kotlin/hu/aut/bme/matesebi/todocoach/network/NetworkConfig.kt	(revision 8f440f3370ea409ac5288dc04fb55959320aeb3f)
++++ app/src/main/kotlin/hu/aut/bme/matesebi/todocoach/network/NetworkConfig.kt	(date 1589230312929)
+@@ -1,6 +1,6 @@
+ package hu.aut.bme.matesebi.todocoach.network
+ 
+ object NetworkConfig {
+-    const val BASE_URL = "https://api.todoist.com/rest/v1"
+-    const val OAUTH_URL = "https://todoist.com/oauth"
++    const val BASE_URL = "https://api.todoist.com/"
++    const val OAUTH_URL = "https://todoist.com/oauth/"
+ }
+\ No newline at end of file
+Index: app/src/main/kotlin/hu/aut/bme/matesebi/todocoach/network/OAuthApi.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package hu.aut.bme.matesebi.todocoach.network\n\nimport retrofit2.http.FormUrlEncoded\nimport retrofit2.http.POST\nimport retrofit2.http.QueryMap\n\ninterface OAuthApi {\n\n    @POST(\"authorize\")\n    @FormUrlEncoded\n    fun authorize(@QueryMap queryParams: Map<String, String>)\n\n    @POST(\"access_token\")\n    @FormUrlEncoded\n    fun getAccessCode(@QueryMap queryParams: Map<String, String>)\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/kotlin/hu/aut/bme/matesebi/todocoach/network/OAuthApi.kt	(revision 8f440f3370ea409ac5288dc04fb55959320aeb3f)
++++ app/src/main/kotlin/hu/aut/bme/matesebi/todocoach/network/OAuthApi.kt	(date 1589223787512)
+@@ -1,8 +1,8 @@
+ package hu.aut.bme.matesebi.todocoach.network
+ 
+-import retrofit2.http.FormUrlEncoded
+-import retrofit2.http.POST
+-import retrofit2.http.QueryMap
++import com.google.gson.annotations.SerializedName
++import retrofit2.Call
++import retrofit2.http.*
+ 
+ interface OAuthApi {
+ 
+@@ -12,5 +12,12 @@
+ 
+     @POST("access_token")
+     @FormUrlEncoded
+-    fun getAccessCode(@QueryMap queryParams: Map<String, String>)
++    @Headers("Accept: application/json")
++    fun getAccessCode(
++        @Field("client_id") clientId: String,
++        @Field("client_secret") clientSecret: String,
++        @Field("code") code: String
++    ): Call<AccessToken>
++
++    class AccessToken(@SerializedName("access_token") val accessToken: String)
+ }
+\ No newline at end of file
+Index: app/src/main/kotlin/hu/aut/bme/matesebi/todocoach/ui/list/ListScreen.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package hu.aut.bme.matesebi.todocoach.ui.list\n\nimport hu.aut.bme.matesebi.todocoach.model.DummyContent\n\ninterface ListScreen {\n    fun showItems(items: List<DummyContent>)\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/kotlin/hu/aut/bme/matesebi/todocoach/ui/list/ListScreen.kt	(revision 8f440f3370ea409ac5288dc04fb55959320aeb3f)
++++ app/src/main/kotlin/hu/aut/bme/matesebi/todocoach/ui/list/ListScreen.kt	(date 1589235569654)
+@@ -1,7 +1,10 @@
+ package hu.aut.bme.matesebi.todocoach.ui.list
+ 
+-import hu.aut.bme.matesebi.todocoach.model.DummyContent
++import androidx.annotation.UiThread
++import hu.aut.bme.matesebi.todocoach.model.Task
+ 
+ interface ListScreen {
+-    fun showItems(items: List<DummyContent>)
++
++    @UiThread
++    fun showItems(items: List<Task>)
+ }
+\ No newline at end of file
+Index: .idea/compiler.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<project version=\"4\">\n  <component name=\"CompilerConfiguration\">\n    <annotationProcessing>\n      <profile default=\"true\" name=\"Default\" enabled=\"true\" />\n    </annotationProcessing>\n  </component>\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- .idea/compiler.xml	(revision 8f440f3370ea409ac5288dc04fb55959320aeb3f)
++++ .idea/compiler.xml	(date 1589228198779)
+@@ -4,5 +4,6 @@
+     <annotationProcessing>
+       <profile default="true" name="Default" enabled="true" />
+     </annotationProcessing>
++    <bytecodeTargetLevel target="11" />
+   </component>
+ </project>
+\ No newline at end of file
+Index: app/src/main/kotlin/hu/aut/bme/matesebi/todocoach/model/Section.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package hu.aut.bme.matesebi.todocoach.model\n\ndata class Section(\n    val id: Int? = null,\n    val projectId: Int? = null,\n    val order: Int? = null,\n    val name: String? = null\n)
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/kotlin/hu/aut/bme/matesebi/todocoach/model/Section.kt	(revision 8f440f3370ea409ac5288dc04fb55959320aeb3f)
++++ app/src/main/kotlin/hu/aut/bme/matesebi/todocoach/model/Section.kt	(date 1589230402912)
+@@ -1,7 +1,7 @@
+ package hu.aut.bme.matesebi.todocoach.model
+ 
+ data class Section(
+-    val id: Int? = null,
++    val id: Long? = null,
+     val projectId: Int? = null,
+     val order: Int? = null,
+     val name: String? = null
+Index: app/build.gradle
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>apply plugin: 'com.android.application'\napply plugin: 'kotlin-android'\napply plugin: 'kotlin-kapt'\napply plugin: 'kotlin-android-extensions'\n\n\nandroid {\n    compileSdkVersion 29\n    buildToolsVersion \"29.0.2\"\n    defaultConfig {\n        applicationId \"hu.aut.bme.matesebi.todocoach\"\n        minSdkVersion 21\n        targetSdkVersion 29\n        versionCode 1\n        versionName \"1.0\"\n        testInstrumentationRunner \"androidx.test.runner.AndroidJUnitRunner\"\n    }\n    buildTypes {\n        release {\n            minifyEnabled false\n            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'\n        }\n    }\n\n    compileOptions {\n        sourceCompatibility JavaVersion.VERSION_1_8\n        targetCompatibility JavaVersion.VERSION_1_8\n    }\n\n    kotlinOptions {\n        jvmTarget = JavaVersion.VERSION_1_8.toString()\n    }\n\n    sourceSets {\n        main.java.srcDirs += 'src/main/kotlin'\n        androidTest.java.srcDirs += 'src/androidTest/kotlin'\n        androidTest.java.srcDirs += 'src/mock/kotlin'\n        test.java.srcDirs += 'src/test/kotlin'\n        test.java.srcDirs += 'src/mock/kotlin'\n    }\n    kapt {\n        generateStubs = true\n    }\n}\n\ndependencies {\n    implementation fileTree(dir: 'libs', include: ['*.jar'])\n    implementation \"org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version\"\n    implementation 'androidx.appcompat:appcompat:1.0.2'\n    implementation 'androidx.core:core-ktx:1.0.2'\n    implementation 'androidx.legacy:legacy-support-v4:1.0.0'\n    implementation 'androidx.recyclerview:recyclerview:1.0.0'\n    implementation 'com.google.android.material:material:1.0.0'\n\n    implementation 'com.squareup.retrofit2:retrofit:2.8.1'\n    implementation 'com.squareup.okhttp3:okhttp:4.5.0'\n    implementation 'com.squareup.okhttp3:logging-interceptor:4.5.0'\n    implementation 'com.squareup.retrofit2:converter-gson:2.8.1'\n    implementation 'com.google.code.gson:gson:2.8.6'\n\n    implementation 'androidx.room:room-runtime:2.2.5'\n    kapt 'androidx.room:room-compiler:2.2.5'\n\n    api 'com.google.dagger:dagger:2.27'\n    api 'com.google.dagger:dagger-android:2.27'\n    api 'com.google.dagger:dagger-android-support:2.27'\n    annotationProcessor 'com.google.dagger:dagger-compiler:2.27'\n    kapt 'com.google.dagger:dagger-compiler:2.27'\n    annotationProcessor 'com.google.dagger:dagger-android-processor:2.27'\n    kapt 'com.google.dagger:dagger-android-processor:2.27'\n\n    compileOnly 'javax.annotation:jsr250-api:1.0'\n    implementation 'javax.inject:javax.inject:1'\n\n    testImplementation 'junit:junit:4.12'\n    androidTestImplementation 'androidx.test:runner:1.2.0'\n    androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.1'\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/build.gradle	(revision 8f440f3370ea409ac5288dc04fb55959320aeb3f)
++++ app/build.gradle	(date 1589235656951)
+@@ -46,7 +46,9 @@
+ dependencies {
+     implementation fileTree(dir: 'libs', include: ['*.jar'])
+     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
++    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.4"
+     implementation 'androidx.appcompat:appcompat:1.0.2'
++    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+     implementation 'androidx.core:core-ktx:1.0.2'
+     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+     implementation 'androidx.recyclerview:recyclerview:1.0.0'
+Index: app/src/main/kotlin/hu/aut/bme/matesebi/todocoach/model/Task.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package hu.aut.bme.matesebi.todocoach.model\n\ndata class Task (\n    val id: Int? = null,\n    val projectId: Int? = null,\n    val sectionId: Int? = null,\n    val content: String? = null,\n    val completed: Boolean? = null,\n    val labelIds: List<Int>? = null,\n    val parent: Int? = null,\n    val order: Int? = null,\n    val priority: Int? = null,\n    val due: Due? = null,\n    val url: String? = null,\n    val commentCount: Int? = null\n)
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/kotlin/hu/aut/bme/matesebi/todocoach/model/Task.kt	(revision 8f440f3370ea409ac5288dc04fb55959320aeb3f)
++++ app/src/main/kotlin/hu/aut/bme/matesebi/todocoach/model/Task.kt	(date 1589230402919)
+@@ -1,7 +1,7 @@
+ package hu.aut.bme.matesebi.todocoach.model
+ 
+ data class Task (
+-    val id: Int? = null,
++    val id: Long? = null,
+     val projectId: Int? = null,
+     val sectionId: Int? = null,
+     val content: String? = null,
+Index: app/src/main/AndroidManifest.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"utf-8\"?>\n<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n          package=\"hu.aut.bme.matesebi.todocoach\">\n\n\n    <uses-permission android:name=\"android.permission.INTERNET\" />\n\n    <application\n            android:name=\".ToDoApplication\"\n            android:allowBackup=\"true\"\n            android:icon=\"@mipmap/ic_launcher\"\n            android:label=\"@string/app_name\"\n            android:roundIcon=\"@mipmap/ic_launcher_round\"\n            android:supportsRtl=\"true\"\n            android:theme=\"@style/AppTheme\">\n        <activity\n                android:name=\"hu.aut.bme.matesebi.todocoach.ui.list.ItemListActivity\"\n                android:label=\"@string/app_name\"\n                android:theme=\"@style/AppTheme.NoActionBar\">\n            <intent-filter>\n                <action android:name=\"android.intent.action.MAIN\"/>\n\n                <category android:name=\"android.intent.category.LAUNCHER\"/>\n            </intent-filter>\n        </activity>\n        <activity\n                android:name=\"hu.aut.bme.matesebi.todocoach.ui.detail.ItemDetailActivity\"\n                android:label=\"@string/title_item_detail\"\n                android:parentActivityName=\"hu.aut.bme.matesebi.todocoach.ui.list.ItemListActivity\"\n                android:theme=\"@style/AppTheme.NoActionBar\">\n            <meta-data\n                    android:name=\"android.support.PARENT_ACTIVITY\"\n                    android:value=\"hu.aut.bme.matesebi.todocoach.ui.list.ItemListActivity\"/>\n        </activity>\n    </application>\n\n</manifest>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/AndroidManifest.xml	(revision 8f440f3370ea409ac5288dc04fb55959320aeb3f)
++++ app/src/main/AndroidManifest.xml	(date 1589221024546)
+@@ -3,6 +3,7 @@
+           package="hu.aut.bme.matesebi.todocoach">
+ 
+ 
++    <uses-permission android:name="android.permission.GET_ACCOUNTS" android:maxSdkVersion="22"/>
+     <uses-permission android:name="android.permission.INTERNET" />
+ 
+     <application
+@@ -21,6 +22,13 @@
+                 <action android:name="android.intent.action.MAIN"/>
+ 
+                 <category android:name="android.intent.category.LAUNCHER"/>
++            </intent-filter>
++            <intent-filter>
++                <action android:name="android.intent.action.VIEW"/>
++
++                <category android:name="android.intent.category.DEFAULT"/>
++                <category android:name="android.intent.category.BROWSABLE"/>
++                <data android:host="callback" android:scheme="todocoach"/>
+             </intent-filter>
+         </activity>
+         <activity
+Index: .idea/misc.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<project version=\"4\">\n  <component name=\"ProjectRootManager\" version=\"2\" languageLevel=\"JDK_1_8\" project-jdk-name=\"11\" project-jdk-type=\"JavaSDK\">\n    <output url=\"file://$PROJECT_DIR$/build/classes\" />\n  </component>\n  <component name=\"ProjectType\">\n    <option name=\"id\" value=\"Android\" />\n  </component>\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- .idea/misc.xml	(revision 8f440f3370ea409ac5288dc04fb55959320aeb3f)
++++ .idea/misc.xml	(date 1589228252642)
+@@ -1,6 +1,9 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+ <project version="4">
+-  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_8" project-jdk-name="11" project-jdk-type="JavaSDK">
++  <component name="FrameworkDetectionExcludesConfiguration">
++    <file type="web" url="file://$PROJECT_DIR$" />
++  </component>
++  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="11" project-jdk-type="JavaSDK">
+     <output url="file://$PROJECT_DIR$/build/classes" />
+   </component>
+   <component name="ProjectType">
+Index: app/src/main/kotlin/hu/aut/bme/matesebi/todocoach/model/Project.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package hu.aut.bme.matesebi.todocoach.model\n\ndata class Project(\n    val id: Int? = null,\n    val name: String? = null,\n    val color: Int? = null,\n    val parent: Int? = null,\n    val order: Int? = null,\n    val commentCount: String? = null,\n    val shared: Boolean? = null,\n    val inboxProject: Boolean? = null,\n    val teamInbox: Boolean? = null\n)
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/kotlin/hu/aut/bme/matesebi/todocoach/model/Project.kt	(revision 8f440f3370ea409ac5288dc04fb55959320aeb3f)
++++ app/src/main/kotlin/hu/aut/bme/matesebi/todocoach/model/Project.kt	(date 1589230402926)
+@@ -1,7 +1,7 @@
+ package hu.aut.bme.matesebi.todocoach.model
+ 
+ data class Project(
+-    val id: Int? = null,
++    val id: Long? = null,
+     val name: String? = null,
+     val color: Int? = null,
+     val parent: Int? = null,
