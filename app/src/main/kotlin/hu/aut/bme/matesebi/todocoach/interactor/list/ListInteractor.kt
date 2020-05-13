@@ -2,15 +2,18 @@ package hu.aut.bme.matesebi.todocoach.interactor.list
 
 import android.util.Log
 import hu.aut.bme.matesebi.todocoach.db.TodoDao
+import hu.aut.bme.matesebi.todocoach.interactor.user.UserInteractor
 import hu.aut.bme.matesebi.todocoach.model.Task
 import hu.aut.bme.matesebi.todocoach.network.TodoApi
 import javax.inject.Inject
 
-class ListInteractor @Inject constructor(private val todoApi: TodoApi, private val todoDao: TodoDao) {
-    private val authorization = "Bearer df1f3d82f913d6f725dea3a2e4e35cc7d112b307"
+class ListInteractor @Inject constructor(private val todoApi: TodoApi, private val todoDao: TodoDao, private val userInteractor: UserInteractor) {
+
+    private suspend fun getAuthorization() = userInteractor.getAuthorization()
+
     suspend fun getItems(): List<Task> {
         return try {
-            val tasks = todoApi.getTasks(authorization)
+            val tasks = todoApi.getTasks(getAuthorization())
             tasks.forEach {
                 Log.d("load_tasks", "Task loaded: $it")
             }
@@ -22,10 +25,10 @@ class ListInteractor @Inject constructor(private val todoApi: TodoApi, private v
     }
 
     suspend fun completeTask(task: Task) {
-        todoApi.closeTask(authorization, task.id.toString())
+        todoApi.closeTask(getAuthorization(), task.id.toString())
     }
 
     suspend fun createTask(task: Task) {
-        todoApi.createTask(authorization, task)
+        todoApi.createTask(getAuthorization(), task)
     }
 }

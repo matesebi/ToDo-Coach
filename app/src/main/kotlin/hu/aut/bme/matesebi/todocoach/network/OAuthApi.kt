@@ -10,14 +10,14 @@ interface OAuthApi {
     @FormUrlEncoded
     fun authorize(@QueryMap queryParams: Map<String, String>)
 
-    @POST("access_token")
+    @POST("oauth/access_token")
     @FormUrlEncoded
     @Headers("Accept: application/json")
-    fun getAccessCode(
+    suspend fun getAccessCode(
         @Field("client_id") clientId: String,
         @Field("client_secret") clientSecret: String,
         @Field("code") code: String
-    ): Call<AccessToken>
+    ): AccessToken
 
     class AccessToken(@SerializedName("access_token") val accessToken: String)
 }

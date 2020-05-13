@@ -1,7 +1,9 @@
 package hu.aut.bme.matesebi.todocoach.ui.list
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.EditText
 import android.widget.RatingBar
@@ -9,6 +11,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import hu.aut.bme.matesebi.todocoach.R
 import hu.aut.bme.matesebi.todocoach.injector
+import hu.aut.bme.matesebi.todocoach.interactor.user.UserInteractor
 import hu.aut.bme.matesebi.todocoach.model.Task
 import hu.aut.bme.matesebi.todocoach.ui.detail.DetailPresenter
 import hu.aut.bme.matesebi.todocoach.ui.detail.ItemDetailActivity
@@ -35,6 +38,9 @@ class ItemListActivity : AppCompatActivity(), ListScreen, TaskListAdapter.Listen
      * device.
      */
     private var twoPane: Boolean = false
+
+    @Inject
+    lateinit var userInteractor: UserInteractor
 
     @Inject
     lateinit var presenter: ListPresenter
@@ -88,26 +94,34 @@ class ItemListActivity : AppCompatActivity(), ListScreen, TaskListAdapter.Listen
 
     override fun onStart() {
         super.onStart()
-        scope.launch {
-            presenter.refreshList()
-        }
+
     }
 
     override fun onResume() {
+
         super.onResume()
-//        val uri = intent.data
-//        uri?.also {
-//            uri.getQueryParameter("code")?.also {
+        val uri = intent.data
+        uri?.also {
+            uri.getQueryParameter("code")?.also {
+                Log.d("asdasd", "code: $it")
 //                Toast.makeText(this, "code: $it", Toast.LENGTH_LONG).show()
 //                authInterceptor.getToken(uri.getQueryParameter("code"))
-//                Log.d("asdasd", "code: $it")
-//            }
-//            uri.getQueryParameter("access_token")?.also {
+                userInteractor.authCode = it
+            }
+            uri.getQueryParameter("access_token")?.also {
+                Log.d("asdasd", "access_token: $it")
 //                Toast.makeText(this, "access_token: $it", Toast.LENGTH_LONG).show()
 //                authInterceptor.token = it
-//                Log.d("asdasd", "access_token: $it")
-//            }
-//        }
+            }
+        }
+        scope.launch {
+            if (!userInteractor.isAuthorized()){
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(userInteractor.getAuthorizationUrl()))
+                startActivity(intent)
+            } else {
+                presenter.refreshList()
+            }
+        }
     }
 
     override fun showItems(items: List<Task>) {

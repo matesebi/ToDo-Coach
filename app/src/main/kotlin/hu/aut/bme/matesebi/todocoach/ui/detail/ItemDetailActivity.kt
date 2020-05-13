@@ -46,11 +46,11 @@ class ItemDetailActivity : AppCompatActivity(), DetailScreen {
 
             MainScope().launch {
                 if (fragment.task == null) {
-                    Snackbar.make(view, "No task", Snackbar.LENGTH_LONG).show()
+//                    Snackbar.make(view, "No task", Snackbar.LENGTH_LONG).show()
                 }
 
                 fragment.task?.let {
-                    Snackbar.make(view, "Complete", Snackbar.LENGTH_LONG).show()
+//                    Snackbar.make(view, "Complete", Snackbar.LENGTH_LONG).show()
                     detailPresenter.completeTask(it)
                 }
             }
